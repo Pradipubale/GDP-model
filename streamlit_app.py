@@ -14,18 +14,14 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------------
-# Background Styling with Overlay
+# Clean Modern Styling with Soft Gradient
 st.markdown("""
     <style>
         body {
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/1920px-World_map_blank_without_borders.svg.png');
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-position: center;
+            background-color: #f5f7fa;
         }
         .stApp {
-            background-color: rgba(255, 255, 255, 0.9);
+            background: linear-gradient(to bottom right, #f9fbfd, #eef2f6);
         }
         .header-section {
             display: flex;
@@ -73,6 +69,15 @@ st.markdown("""
             margin-top: 2rem;
             padding: 1rem;
         }
+        .flag-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .flag-title img {
+            width: 20px;
+            height: 15px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -109,14 +114,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
-# Country Helper with Flag
+# Helpers
 def get_country_name(code):
     try:
         return pycountry.countries.get(alpha_3=code).name
     except:
         return code
 
-def get_flag_emoji(code):
+def get_flag_url(code):
     try:
         country = pycountry.countries.get(alpha_3=code)
         return f"https://flagcdn.com/w40/{country.alpha_2.lower()}.png"
@@ -187,7 +192,7 @@ with st.container():
                     growth = f"{last / first:.2f}x"
                     delta_color = "normal"
 
-                flag_url = get_flag_emoji(country)
+                flag_url = get_flag_url(country)
                 name = get_country_name(country)
 
                 st.markdown('<div class="metric-container">', unsafe_allow_html=True)
