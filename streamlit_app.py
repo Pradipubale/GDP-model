@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import math
+import pycountry
 from pathlib import Path
 
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Page Configuration
 st.set_page_config(
     page_title="🌍 Global GDP Dashboard",
@@ -12,13 +13,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ------------------------------------------------------------------------------
-# Custom CSS Styling
+# -------------------------------------------------------------------
+# Background Styling with Overlay
 st.markdown("""
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f9fafc;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/1920px-World_map_blank_without_borders.svg.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        .stApp {
+            background-color: rgba(255, 255, 255, 0.9);
         }
         .header-section {
             display: flex;
@@ -44,6 +51,10 @@ st.markdown("""
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        section[data-testid="stSidebar"] {
+            background-color: #f0f4f8;
+            padding: 1.5rem;
+        }
         .metric-container div[data-testid="metric-container"] {
             background: white;
             padding: 1.2rem;
@@ -62,25 +73,27 @@ st.markdown("""
             margin-top: 2rem;
             padding: 1rem;
         }
-        /* Sidebar styling */
-        section[data-testid="stSidebar"] {
-            background-color: #eef2f6;
-            padding: 1.5rem;
-        }
-        .flag-title {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .flag-title img {
-            width: 20px;
-            height: 15px;
-            margin-right: 0.25rem;
-        }
     </style>
 """, unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Load Data
+@st.cache_data
+def load_data():
+    data_path = Path(__file__).parent / "data/gdp_data.csv"
+    raw_df = pd.read_csv(data_path)
+    df = raw_df.melt(
+        id_vars=['Country Code'],
+        value_vars=[str(y) for y in range(1960, 2023)],
+        var_name='Year',
+        value_name='GDP'
+    )
+    df['Year'] = pd.to_numeric(df['Year'])
+    return df
+
+gdp_df = load_data()
+
+# -------------------------------------------------------------------
 # Header Section
 st.markdown("""
     <div class="header-section">
@@ -95,25 +108,22 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
-# Load GDP Data
-@st.cache_data
-def load_data():
-    data_path = Path(__file__).parent / "data/gdp_data.csv"
-    raw_df = pd.read_csv(data_path)
+# -------------------------------------------------------------------
+# Country Helper with Flag
+def get_country_name(code):
+    try:
+        return pycountry.countries.get(alpha_3=code).name
+    except:
+        return code
 
-    df = raw_df.melt(
-        id_vars=['Country Code'],
-        value_vars=[str(y) for y in range(1960, 2023)],
-        var_name='Year',
-        value_name='GDP'
-    )
-    df['Year'] = pd.to_numeric(df['Year'])
-    return df
+def get_flag_emoji(code):
+    try:
+        country = pycountry.countries.get(alpha_3=code)
+        return f"https://flagcdn.com/w40/{country.alpha_2.lower()}.png"
+    except:
+        return None
 
-gdp_df = load_data()
-
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Sidebar Filters
 with st.sidebar:
     st.header("🔍 Filter Options")
@@ -123,9 +133,21 @@ with st.sidebar:
 
     country_list = sorted(gdp_df['Country Code'].unique())
     default = ['USA', 'CHN', 'DEU', 'IND', 'JPN']
-    selected_countries = st.multiselect("Select Countries", options=country_list, default=default)
 
-# ------------------------------------------------------------------------------
+    country_names = {
+        code: f"{get_country_name(code)} ({code})" for code in country_list
+    }
+    name_to_code = {v: k for k, v in country_names.items()}
+
+    selection = st.multiselect(
+        "Select Countries", 
+        options=list(country_names.values()), 
+        default=[country_names[c] for c in default]
+    )
+
+    selected_countries = [name_to_code[name] for name in selection]
+
+# -------------------------------------------------------------------
 # Filtered Data
 filtered_df = gdp_df[
     (gdp_df['Country Code'].isin(selected_countries)) &
@@ -133,7 +155,7 @@ filtered_df = gdp_df[
     (gdp_df['Year'] <= year_range[1])
 ]
 
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
 # GDP Trends Chart
 st.subheader("📈 GDP Trends Over Time")
 if not selected_countries:
@@ -142,8 +164,8 @@ else:
     chart_df = filtered_df.pivot(index="Year", columns="Country Code", values="GDP")
     st.line_chart(chart_df, use_container_width=True)
 
-# ------------------------------------------------------------------------------
-# GDP Summary Metrics with Flags
+# -------------------------------------------------------------------
+# GDP Summary Metrics
 st.subheader(f"💰 GDP Summary in {year_range[1]}")
 first_year_df = gdp_df[gdp_df["Year"] == year_range[0]]
 last_year_df = gdp_df[gdp_df["Year"] == year_range[1]]
@@ -165,29 +187,28 @@ with st.container():
                     growth = f"{last / first:.2f}x"
                     delta_color = "normal"
 
-                # Get country flag URL
-                flag_url = f"https://flagcdn.com/48x36/{country.lower()}.png"
+                flag_url = get_flag_emoji(country)
+                name = get_country_name(country)
 
-                # Flag title
                 st.markdown('<div class="metric-container">', unsafe_allow_html=True)
                 st.markdown(f"""
                     <div class="flag-title">
                         <img src="{flag_url}">
-                        <strong>{country}</strong>
+                        <strong>{name}</strong>
                     </div>
                 """, unsafe_allow_html=True)
                 st.metric(label="", value=f"{last:,.0f}B USD", delta=growth, delta_color=delta_color)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            except Exception as e:
+            except Exception:
                 st.metric(label=f"{country} GDP", value="Data not available")
 
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Show Raw Data Table
 with st.expander("📄 View Raw Data Table"):
     st.dataframe(filtered_df, use_container_width=True)
 
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
 # Footer
 st.markdown("""
     <div class="footer">
