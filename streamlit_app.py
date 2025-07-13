@@ -241,4 +241,4 @@ st.markdown("""
         Built with ❤️ using <a href="https://streamlit.io" target="_blank">Streamlit</a> |
         Source: <a href="https://data.worldbank.org/" target="_blank">World Bank Open Data</a>
     </div>
-""", unsafe_allow_html=True)\ in this code
+""", unsafe_allow_html=True)\ 
