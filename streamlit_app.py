@@ -17,11 +17,8 @@ st.set_page_config(
 # Clean Modern Styling with Soft Gradient
 st.markdown("""
     <style>
-        body {
-            background-color: #f5f7fa;
-        }
-        .stApp {
-            background: linear-gradient(to bottom right, #f9fbfd, #eef2f6);
+        html, body, .stApp {
+            background-color: #f4f6f8;
         }
         .header-section {
             display: flex;
@@ -40,7 +37,7 @@ st.markdown("""
         }
         .header-text p {
             font-size: 1.1rem;
-            color: #555;
+            color: #444;
         }
         .header-image img {
             max-width: 260px;
@@ -48,7 +45,7 @@ st.markdown("""
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         section[data-testid="stSidebar"] {
-            background-color: #f0f4f8;
+            background-color: #e9edf3;
             padding: 1.5rem;
         }
         .metric-container div[data-testid="metric-container"] {
@@ -62,13 +59,6 @@ st.markdown("""
             transform: scale(1.03);
             box-shadow: 0 6px 20px rgba(0,0,0,0.1);
         }
-        .footer {
-            text-align: center;
-            color: #999;
-            font-size: 0.85rem;
-            margin-top: 2rem;
-            padding: 1rem;
-        }
         .flag-title {
             display: flex;
             align-items: center;
@@ -78,8 +68,16 @@ st.markdown("""
             width: 20px;
             height: 15px;
         }
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 0.85rem;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
     </style>
 """, unsafe_allow_html=True)
+
 
 # -------------------------------------------------------------------
 # Load Data
