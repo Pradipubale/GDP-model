@@ -2,9 +2,12 @@ import streamlit as st
 import pandas as pd
 import math
 from pathlib import Path
+from PIL import Image
+import requests
+from io import BytesIO
 
 # -----------------------------------------------------------------------------
-# Set page configuration
+# Page config with wide layout
 st.set_page_config(
     page_title='GDP Dashboard',
     page_icon='🌍',
@@ -13,18 +16,24 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# Header section with styling
+# Banner image (replace URL with any image you want)
+banner_url = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1350&q=80"
+response = requests.get(banner_url)
+banner_img = Image.open(BytesIO(response.content))
+st.image(banner_img, use_column_width=True)
+
+# -----------------------------------------------------------------------------
+# Header text with style
 st.markdown("""
-    <div style='text-align: center'>
-        <h1 style='color:#1f77b4;'>🌍 Global GDP Dashboard</h1>
-        <p>Browse historical GDP data from the 
+    <div style='text-align: center; margin-top: -50px; margin-bottom: 30px;'>
+        <h1 style='color:#1f77b4; font-family: Arial, sans-serif;'>🌍 Global GDP Dashboard</h1>
+        <p style='font-size:18px;'>Explore historical GDP data from the 
         <a href='https://data.worldbank.org/' target='_blank'>World Bank Open Data</a>.</p>
     </div>
-    <hr>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# Load GDP data
+# Load GDP data function
 @st.cache_data
 def get_gdp_data():
     DATA_FILENAME = Path(__file__).parent / 'data/gdp_data.csv'
@@ -39,14 +48,13 @@ def get_gdp_data():
         var_name='Year',
         value_name='GDP',
     )
-
     gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
     return gdp_df
 
 gdp_df = get_gdp_data()
 
 # -----------------------------------------------------------------------------
-# Sidebar filters
+# Sidebar filters with better titles and emojis
 with st.sidebar:
     st.header("🔎 Filters")
 
@@ -54,7 +62,7 @@ with st.sidebar:
     max_year = gdp_df['Year'].max()
 
     from_year, to_year = st.slider(
-        'Select year range',
+        'Select year range ⏳',
         min_value=min_year,
         max_value=max_year,
         value=[min_year, max_year]
@@ -63,13 +71,13 @@ with st.sidebar:
     countries = gdp_df['Country Code'].unique()
 
     selected_countries = st.multiselect(
-        'Select countries',
+        'Select countries 🌐',
         countries,
         ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN']
     )
 
 # -----------------------------------------------------------------------------
-# Filter data based on user selection
+# Filter data by user selection
 filtered_gdp_df = gdp_df[
     (gdp_df['Country Code'].isin(selected_countries)) &
     (gdp_df['Year'] >= from_year) &
@@ -77,9 +85,9 @@ filtered_gdp_df = gdp_df[
 ]
 
 # -----------------------------------------------------------------------------
-# GDP Trends Chart
+# GDP Trends Section with emoji and styling
 st.subheader('📈 GDP Trends Over Time')
-st.caption('This chart shows the GDP evolution over the selected years for each country.')
+st.caption('GDP evolution over the selected years for each country.')
 
 if selected_countries:
     st.line_chart(
@@ -93,7 +101,29 @@ else:
     st.info("Please select at least one country from the sidebar.")
 
 # -----------------------------------------------------------------------------
-# GDP Summary Metrics
+# Function to get country flag emoji by country code (ISO Alpha-3 to emoji)
+def country_code_to_emoji(code):
+    # This uses regional indicator symbols, only works with ISO Alpha-2 code.
+    # We'll map alpha-3 code to alpha-2 manually (common countries)
+    mapping = {
+        'DEU': 'DE',
+        'FRA': 'FR',
+        'GBR': 'GB',
+        'BRA': 'BR',
+        'MEX': 'MX',
+        'JPN': 'JP',
+        # Add more if needed
+    }
+    alpha2 = mapping.get(code, None)
+    if not alpha2:
+        return ''
+    # Convert letters to regional indicator symbols
+    OFFSET = 127397
+    return chr(ord(alpha2[0]) + OFFSET) + chr(ord(alpha2[1]) + OFFSET)
+
+# -----------------------------------------------------------------------------
+# GDP Summary Metrics with flags and nice layout
+
 st.subheader(f'💰 GDP Summary in {to_year}')
 first_year = gdp_df[gdp_df['Year'] == from_year]
 last_year = gdp_df[gdp_df['Year'] == to_year]
@@ -103,6 +133,7 @@ cols = st.columns(4)
 for i, country in enumerate(selected_countries):
     col = cols[i % len(cols)]
     with col:
+        flag = country_code_to_emoji(country)
         try:
             first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1e9
             last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1e9
@@ -115,25 +146,37 @@ for i, country in enumerate(selected_countries):
                 delta_color = 'normal'
 
             st.metric(
-                label=f"{country} GDP",
+                label=f"{flag} {country} GDP",
                 value=f"{last_gdp:,.0f}B USD",
                 delta=growth,
                 delta_color=delta_color
             )
         except:
-            st.metric(label=f"{country} GDP", value="Data unavailable")
+            st.metric(label=f"{flag} {country} GDP", value="Data unavailable")
 
 # -----------------------------------------------------------------------------
-# Optional: Show raw data table
-with st.expander("📄 View Raw Data Table"):
-    st.dataframe(filtered_gdp_df, use_container_width=True)
+# Add a two-column layout for raw data and extra image
+
+with st.container():
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        with st.expander("📄 View Raw Data Table"):
+            st.dataframe(filtered_gdp_df, use_container_width=True)
+
+    with col2:
+        # Add a related image (economic or finance themed)
+        side_img_url = "https://images.unsplash.com/photo-1515165562835-cd9e8b36a76b?auto=format&fit=crop&w=500&q=80"
+        response = requests.get(side_img_url)
+        side_img = Image.open(BytesIO(response.content))
+        st.image(side_img, caption="Global economy concept", use_column_width=True)
 
 # -----------------------------------------------------------------------------
-# Footer
+# Footer with style
 st.markdown("""
     <hr>
-    <div style='text-align: center; font-size: small;'>
-        Built with ❤️ using <a href='https://streamlit.io/' target='_blank'>Streamlit</a> |
+    <div style='text-align: center; font-size: small; color: gray;'>
+        Built with ❤️ using <a href='https://streamlit.io/' target='_blank'>Streamlit</a> | 
         Data Source: <a href='https://data.worldbank.org/' target='_blank'>World Bank</a>
     </div>
 """, unsafe_allow_html=True)
