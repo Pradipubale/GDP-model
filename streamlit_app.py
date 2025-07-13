@@ -18,9 +18,13 @@ st.set_page_config(
 # -----------------------------------------------------------------------------
 # Banner image (replace URL with any image you want)
 banner_url = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1350&q=80"
-response = requests.get(banner_url)
-banner_img = Image.open(BytesIO(response.content))
-st.image(banner_img, use_column_width=True)
+try:
+    response = requests.get(banner_url)
+    response.raise_for_status()
+    banner_img = Image.open(BytesIO(response.content))
+    st.image(banner_img, use_container_width=True)
+except Exception:
+    st.warning("Failed to load banner image.")
 
 # -----------------------------------------------------------------------------
 # Header text with style
@@ -103,8 +107,6 @@ else:
 # -----------------------------------------------------------------------------
 # Function to get country flag emoji by country code (ISO Alpha-3 to emoji)
 def country_code_to_emoji(code):
-    # This uses regional indicator symbols, only works with ISO Alpha-2 code.
-    # We'll map alpha-3 code to alpha-2 manually (common countries)
     mapping = {
         'DEU': 'DE',
         'FRA': 'FR',
@@ -112,18 +114,15 @@ def country_code_to_emoji(code):
         'BRA': 'BR',
         'MEX': 'MX',
         'JPN': 'JP',
-        # Add more if needed
     }
     alpha2 = mapping.get(code, None)
     if not alpha2:
         return ''
-    # Convert letters to regional indicator symbols
     OFFSET = 127397
     return chr(ord(alpha2[0]) + OFFSET) + chr(ord(alpha2[1]) + OFFSET)
 
 # -----------------------------------------------------------------------------
 # GDP Summary Metrics with flags and nice layout
-
 st.subheader(f'💰 GDP Summary in {to_year}')
 first_year = gdp_df[gdp_df['Year'] == from_year]
 last_year = gdp_df[gdp_df['Year'] == to_year]
@@ -155,8 +154,7 @@ for i, country in enumerate(selected_countries):
             st.metric(label=f"{flag} {country} GDP", value="Data unavailable")
 
 # -----------------------------------------------------------------------------
-# Add a two-column layout for raw data and extra image
-
+# Two-column layout for raw data and side image
 with st.container():
     col1, col2 = st.columns([3, 1])
 
@@ -165,11 +163,15 @@ with st.container():
             st.dataframe(filtered_gdp_df, use_container_width=True)
 
     with col2:
-        # Add a related image (economic or finance themed)
-        side_img_url = "https://images.unsplash.com/photo-1515165562835-cd9e8b36a76b?auto=format&fit=crop&w=500&q=80"
-        response = requests.get(side_img_url)
-        side_img = Image.open(BytesIO(response.content))
-        st.image(side_img, caption="Global economy concept", use_column_width=True)
+        side_img_url = "https://images.unsplash.com/photo-1497493292307-31c376b6e479?auto=format&fit=crop&w=500&q=80"
+        try:
+            response = requests.get(side_img_url)
+            response.raise_for_status()
+            side_img = Image.open(BytesIO(response.content))
+            st.image(side_img, caption="Global economy concept", use_container_width=True)
+        except Exception as e:
+            st.warning("Failed to load side image.")
+            st.write(f"Error: {e}")
 
 # -----------------------------------------------------------------------------
 # Footer with style
