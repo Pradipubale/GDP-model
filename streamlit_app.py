@@ -18,9 +18,7 @@ st.markdown("""
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-        }
-        .main-container {
-            padding: 2rem;
+            background-color: #f9fafc;
         }
         .header-section {
             display: flex;
@@ -42,7 +40,7 @@ st.markdown("""
             color: #555;
         }
         .header-image img {
-            max-width: 280px;
+            max-width: 260px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
@@ -63,6 +61,21 @@ st.markdown("""
             font-size: 0.85rem;
             margin-top: 2rem;
             padding: 1rem;
+        }
+        /* Sidebar styling */
+        section[data-testid="stSidebar"] {
+            background-color: #eef2f6;
+            padding: 1.5rem;
+        }
+        .flag-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .flag-title img {
+            width: 20px;
+            height: 15px;
+            margin-right: 0.25rem;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -103,7 +116,7 @@ gdp_df = load_data()
 # ------------------------------------------------------------------------------
 # Sidebar Filters
 with st.sidebar:
-    st.header("🔎 Filter Data")
+    st.header("🔍 Filter Options")
 
     min_year, max_year = int(gdp_df['Year'].min()), int(gdp_df['Year'].max())
     year_range = st.slider("Select Year Range", min_value=min_year, max_value=max_year, value=(2010, 2022))
@@ -130,7 +143,7 @@ else:
     st.line_chart(chart_df, use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# GDP Summary Metrics
+# GDP Summary Metrics with Flags
 st.subheader(f"💰 GDP Summary in {year_range[1]}")
 first_year_df = gdp_df[gdp_df["Year"] == year_range[0]]
 last_year_df = gdp_df[gdp_df["Year"] == year_range[1]]
@@ -152,11 +165,22 @@ with st.container():
                     growth = f"{last / first:.2f}x"
                     delta_color = "normal"
 
+                # Get country flag URL
+                flag_url = f"https://flagcdn.com/48x36/{country.lower()}.png"
+
+                # Flag title
                 st.markdown('<div class="metric-container">', unsafe_allow_html=True)
-                st.metric(label=f"{country}", value=f"{last:,.0f}B USD", delta=growth, delta_color=delta_color)
+                st.markdown(f"""
+                    <div class="flag-title">
+                        <img src="{flag_url}">
+                        <strong>{country}</strong>
+                    </div>
+                """, unsafe_allow_html=True)
+                st.metric(label="", value=f"{last:,.0f}B USD", delta=growth, delta_color=delta_color)
                 st.markdown('</div>', unsafe_allow_html=True)
-            except:
-                st.metric(label=f"{country}", value="Data not available")
+
+            except Exception as e:
+                st.metric(label=f"{country} GDP", value="Data not available")
 
 # ------------------------------------------------------------------------------
 # Show Raw Data Table
