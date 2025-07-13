@@ -18,62 +18,85 @@ st.set_page_config(
 st.markdown("""
     <style>
         html, body, .stApp {
-            background-color: #f4f6f8;
+            background-color: #000000;
+            color: #f0f0f0;
         }
+
         .header-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #ffffff;
+            background: #1c1c1c;
             padding: 2rem;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
             margin-bottom: 2rem;
         }
+
         .header-text h1 {
-            color: #1f77b4;
+            color: #00bfff;
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
         }
+
         .header-text p {
             font-size: 1.1rem;
-            color: #444;
+            color: #dddddd;
         }
+
         .header-image img {
             max-width: 260px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
         }
+
         section[data-testid="stSidebar"] {
-            background-color: #e9edf3;
+            background-color: #111111;
             padding: 1.5rem;
+            color: #f0f0f0;
         }
+
         .metric-container div[data-testid="metric-container"] {
-            background: white;
+            background: #1a1a1a;
+            color: #ffffff;
             padding: 1.2rem;
             border-radius: 10px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 3px 8px rgba(255, 255, 255, 0.05);
             transition: 0.3s ease-in-out;
         }
+
         .metric-container div[data-testid="metric-container"]:hover {
             transform: scale(1.03);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.1);
         }
+
         .flag-title {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: #ffffff;
         }
+
         .flag-title img {
             width: 20px;
             height: 15px;
         }
+
         .footer {
             text-align: center;
-            color: #999;
+            color: #888888;
             font-size: 0.85rem;
             margin-top: 2rem;
             padding: 1rem;
+        }
+
+        a {
+            color: #00bfff;
+        }
+
+        .stSelectbox, .stSlider, .stMultiselect, .stDataFrame {
+            background-color: #1a1a1a !important;
+            color: white !important;
         }
     </style>
 """, unsafe_allow_html=True)
