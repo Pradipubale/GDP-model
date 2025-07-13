@@ -3,7 +3,6 @@ import pandas as pd
 import math
 import pycountry
 from pathlib import Path
-import wbgapi as wb  # You need to install this package
 
 # -------------------------------------------------------------------
 # Page Configuration
@@ -22,6 +21,7 @@ st.markdown("""
             background-color: #000000;
             color: #f0f0f0;
         }
+
         .header-section {
             display: flex;
             justify-content: space-between;
@@ -32,25 +32,30 @@ st.markdown("""
             box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
             margin-bottom: 2rem;
         }
+
         .header-text h1 {
             color: #00bfff;
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
         }
+
         .header-text p {
             font-size: 1.1rem;
             color: #dddddd;
         }
+
         .header-image img {
             max-width: 260px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
         }
+
         section[data-testid="stSidebar"] {
             background-color: #111111;
             padding: 1.5rem;
             color: #f0f0f0;
         }
+
         .metric-container div[data-testid="metric-container"] {
             background: #1a1a1a;
             color: #ffffff;
@@ -59,20 +64,24 @@ st.markdown("""
             box-shadow: 0 3px 8px rgba(255, 255, 255, 0.05);
             transition: 0.3s ease-in-out;
         }
+
         .metric-container div[data-testid="metric-container"]:hover {
             transform: scale(1.03);
             box-shadow: 0 6px 20px rgba(255,255,255,0.1);
         }
+
         .flag-title {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             color: #ffffff;
         }
+
         .flag-title img {
             width: 20px;
             height: 15px;
         }
+
         .footer {
             text-align: center;
             color: #888888;
@@ -80,9 +89,11 @@ st.markdown("""
             margin-top: 2rem;
             padding: 1rem;
         }
+
         a {
             color: #00bfff;
         }
+
         .stSelectbox, .stSlider, .stMultiselect, .stDataFrame {
             background-color: #1a1a1a !important;
             color: white !important;
@@ -90,8 +101,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 # -------------------------------------------------------------------
-# Load Static Data
+# Load Data
 @st.cache_data
 def load_data():
     data_path = Path(__file__).parent / "data/gdp_data.csv"
@@ -162,7 +174,7 @@ with st.sidebar:
     selected_countries = [name_to_code[name] for name in selection]
 
 # -------------------------------------------------------------------
-# Filtered Static Data
+# Filtered Data
 filtered_df = gdp_df[
     (gdp_df['Country Code'].isin(selected_countries)) &
     (gdp_df['Year'] >= year_range[0]) &
@@ -170,52 +182,13 @@ filtered_df = gdp_df[
 ]
 
 # -------------------------------------------------------------------
-# Static GDP Trends Chart
-st.subheader("📈 GDP Trends Over Time (1960–2022)")
+# GDP Trends Chart
+st.subheader("📈 GDP Trends Over Time")
 if not selected_countries:
     st.info("Please select one or more countries to display the chart.")
 else:
     chart_df = filtered_df.pivot(index="Year", columns="Country Code", values="GDP")
     st.line_chart(chart_df, use_container_width=True)
-
-# -------------------------------------------------------------------
-# LIVE GDP DATA SECTION
-
-import wbgapi as wb
-
-@st.cache_data(ttl=3600)
-def fetch_live_gdp(country_codes):
-    # Fetch GDP data for 2020-2025 from World Bank API
-    data = {}
-    for c in country_codes:
-        try:
-            df = wb.data.DataFrame(series='NY.GDP.MKTP.CD', economy=c, time=range(2020, 2026))
-            # df columns: GDP value by year, rows indexed by year
-            # Extract the series as {year: value}
-            data[c] = df[c].dropna().to_dict()
-        except Exception as e:
-            data[c] = {}
-    return data
-
-live_gdp_data = fetch_live_gdp(selected_countries)
-
-st.subheader("🌐 Live GDP Data (2020–2025) from World Bank API")
-if not selected_countries:
-    st.info("Select countries to view live GDP data.")
-else:
-    for c in selected_countries:
-        flag_url = get_flag_url(c)
-        name = get_country_name(c)
-        st.markdown(f"### {name} <img src='{flag_url}' style='width:30px; height:20px;'/>", unsafe_allow_html=True)
-        live_years = live_gdp_data.get(c, {})
-        if live_years:
-            for year in sorted(live_years.keys()):
-                gdp_val = live_years[year]
-                if gdp_val is not None:
-                    val_billions = gdp_val / 1e9
-                    st.write(f"- **{year}**: {val_billions:,.2f} B USD")
-        else:
-            st.write("Data not available.")
 
 # -------------------------------------------------------------------
 # GDP Summary Metrics
@@ -258,3 +231,14 @@ with st.container():
 
 # -------------------------------------------------------------------
 # Show Raw Data Table
+with st.expander("📄 View Raw Data Table"):
+    st.dataframe(filtered_df, use_container_width=True)
+
+# -------------------------------------------------------------------
+# Footer
+st.markdown("""
+    <div class="footer">
+        Built with ❤️ using <a href="https://streamlit.io" target="_blank">Streamlit</a> |
+        Source: <a href="https://data.worldbank.org/" target="_blank">World Bank Open Data</a>
+    </div>
+""", unsafe_allow_html=True)\ in this code
