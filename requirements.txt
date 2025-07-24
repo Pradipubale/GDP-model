@@ -2,4 +2,5 @@ streamlit
 pandas
 pycountry
 wbgapi
-
+numpy 
+matplotlib
